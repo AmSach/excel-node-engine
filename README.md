@@ -30,7 +30,7 @@ Decision Graph is available as both a standalone compiled Windows executable (`D
 
 ### A. The Reactive Spreadsheet Grid (Virtual Table Model)
 * **High-Speed Virtual Scrolling:** Built on PySide6's `QAbstractTableModel` (`FastDataFrameModel`). Scrolls through 100,000+ rows at 60 FPS with zero memory lag.
-* **Column Profiling:** Each column header features data type badges (`#` Numeric, `Aa` Text, `📅` Date), null ratio indicators, and one-click sorting.
+* **Column Profiling:** Each column header features data type badges (`[NUM]` Numeric, `[TXT]` Text, `[DATE]` Date), null ratio indicators, and one-click sorting.
 * **Inline Cell Editing:** Double-click any cell to edit in-place with instant data-type coercion and automatic downstream pipeline recalculation.
 * **Calculated Formula Columns:** Add computed columns using standard Excel-style syntax (e.g. `=gross_revenue - cogs`, `=ROUND(effective_price * 1.1, 2)`) or column arithmetic.
 * **Column Statistics Card:** Click any header to inspect Mean, Median, Std Dev, Min, Max, Quantiles, and unique category breakdowns.
