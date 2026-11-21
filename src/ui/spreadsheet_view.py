@@ -23,10 +23,27 @@ class FastDataFrameModel(QAbstractTableModel):
     def __init__(self, df: Optional[pd.DataFrame] = None):
         super().__init__()
         self._df = df if df is not None else pd.DataFrame()
+        self._cached_headers = []
+        self._refresh_headers()
+
+    def _refresh_headers(self):
+        self._cached_headers = []
+        if self._df.empty:
+            return
+        for col_name, dtype in zip(self._df.columns, self._df.dtypes):
+            dt_str = str(dtype).lower()
+            if "int" in dt_str or "float" in dt_str:
+                prefix = "[NUM] "
+            elif "date" in dt_str or "time" in dt_str:
+                prefix = "[DATE] "
+            else:
+                prefix = "[TXT] "
+            self._cached_headers.append(f"{prefix}{col_name}")
 
     def set_dataframe(self, df: pd.DataFrame):
         self.beginResetModel()
         self._df = df.copy() if df is not None else pd.DataFrame()
+        self._refresh_headers()
         self.endResetModel()
         self.data_modified.emit()
 
@@ -69,17 +86,10 @@ class FastDataFrameModel(QAbstractTableModel):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                if section < len(self._df.columns):
-                    col_name = str(self._df.columns[section])
-                    dtype = str(self._df.dtypes.iloc[section])
-                    # Add type icon badge
-                    if "int" in dtype or "float" in dtype:
-                        badge = "# "
-                    elif "date" in dtype:
-                        badge = "📅 "
-                    else:
-                        badge = "Aa "
-                    return f"{badge}{col_name}"
+                if section < len(self._cached_headers):
+                    return self._cached_headers[section]
+                elif section < len(self._df.columns):
+                    return str(self._df.columns[section])
             elif orientation == Qt.Vertical:
                 return str(section + 1)
         return None
@@ -136,10 +146,20 @@ class SpreadsheetView(QTableView):
 
     def load_dataframe(self, df: pd.DataFrame):
         self.model_df.set_dataframe(df)
-        self.resizeColumnsToContents()
-        # Bound column widths between 80px and 220px for optimal readability
+        if df.empty:
+            return
+        # Fast sample-based column width calculation (O(1) relative to large datasets)
+        sample = df.head(30)
+        font_metrics = self.fontMetrics()
         for c in range(self.model_df.columnCount()):
-            w = max(90, min(240, self.columnWidth(c)))
+            col_name = str(df.columns[c])
+            header_w = font_metrics.horizontalAdvance(f"[NUM] {col_name}") + 35
+            sample_w = 0
+            if not sample.empty:
+                val_strs = sample.iloc[:, c].astype(str)
+                longest = max(val_strs, key=len) if len(val_strs) > 0 else ""
+                sample_w = font_metrics.horizontalAdvance(longest) + 24
+            w = max(90, min(280, max(header_w, sample_w)))
             self.setColumnWidth(c, w)
 
     def get_current_dataframe(self) -> pd.DataFrame:
@@ -164,7 +184,7 @@ class SpreadsheetView(QTableView):
             action_stats = menu.addAction(f"Inspect Column '{col_name}' Statistics")
             menu.addSeparator()
 
-        action_add_formula = menu.addAction("➕ Add Calculated Formula Column...")
+        action_add_formula = menu.addAction("+ Add Calculated Formula Column...")
 
         action = menu.exec(self.viewport().mapToGlobal(pos))
         if not action:

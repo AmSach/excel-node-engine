@@ -43,27 +43,27 @@ class ConnectionCableItem(QGraphicsPathItem):
 
 
 class NodeCanvasScene(QGraphicsScene):
-    """Custom GraphicsScene handling dot-grid rendering and connection dragging."""
+    """Custom GraphicsScene handling high-performance dot-grid rendering."""
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setSceneRect(-2000, -2000, 4000, 4000)
-        self.grid_size = 20
+        self.setSceneRect(-3000, -3000, 6000, 6000)
+        self.grid_size = 24
+
+        # Pre-render 24x24 dot pattern into cached QPixmap for 60 FPS hardware accelerated tiling
+        from PySide6.QtGui import QPixmap
+        tile = QPixmap(self.grid_size, self.grid_size)
+        tile.fill(QColor("#f8fafc"))
+        tile_painter = QPainter(tile)
+        tile_painter.setRenderHint(QPainter.Antialiasing)
+        tile_painter.setPen(Qt.NoPen)
+        tile_painter.setBrush(QColor("#cbd5e1"))
+        tile_painter.drawEllipse(11, 11, 2, 2)
+        tile_painter.end()
+        self._bg_brush = QBrush(tile)
 
     def drawBackground(self, painter: QPainter, rect: QRectF):
-        painter.fillRect(rect, QColor("#fbfbfb"))
-
-        # Subtle Dot Grid
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor("#e4e4e7"))
-
-        left = int(rect.left()) - (int(rect.left()) % self.grid_size)
-        top = int(rect.top()) - (int(rect.top()) % self.grid_size)
-
-        points = []
-        for x in range(left, int(rect.right()), self.grid_size):
-            for y in range(top, int(rect.bottom()), self.grid_size):
-                painter.drawEllipse(x, y, 2, 2)
+        painter.fillRect(rect, self._bg_brush)
 
 
 class NodeCanvasView(QGraphicsView):
@@ -78,7 +78,7 @@ class NodeCanvasView(QGraphicsView):
         self.scene_obj = NodeCanvasScene(self)
         self.setScene(self.scene_obj)
         self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
-        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.SmartViewportUpdate)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)

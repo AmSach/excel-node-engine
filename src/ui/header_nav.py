@@ -42,40 +42,40 @@ class HeaderNavToolbar(QFrame):
         layout.addSpacing(16)
 
         # 1-Click Action Buttons
-        self.btn_anomaly = QPushButton("⚡ Anomaly Audit")
+        self.btn_anomaly = QPushButton("ANOMALY AUDIT")
         self.btn_anomaly.setObjectName("primaryActionBtn")
         self.btn_anomaly.clicked.connect(lambda: self.action_triggered.emit("run_anomaly"))
         layout.addWidget(self.btn_anomaly)
 
-        self.btn_elasticity = QPushButton("📈 Price Elasticity")
+        self.btn_elasticity = QPushButton("PRICE ELASTICITY")
         self.btn_elasticity.setObjectName("emeraldActionBtn")
         self.btn_elasticity.clicked.connect(lambda: self.action_triggered.emit("run_elasticity"))
         layout.addWidget(self.btn_elasticity)
 
-        self.btn_cfar = QPushButton("🎲 Cash Flow Stress")
+        self.btn_cfar = QPushButton("CASH FLOW STRESS")
         self.btn_cfar.setObjectName("indigoActionBtn")
         self.btn_cfar.clicked.connect(lambda: self.action_triggered.emit("run_cfar"))
         layout.addWidget(self.btn_cfar)
 
-        self.btn_inventory = QPushButton("📦 Stock MEIO")
+        self.btn_inventory = QPushButton("STOCK MEIO")
         self.btn_inventory.clicked.connect(lambda: self.action_triggered.emit("run_inventory"))
         layout.addWidget(self.btn_inventory)
 
-        self.btn_network = QPushButton("🕸️ Network Fragility")
+        self.btn_network = QPushButton("NETWORK FRAGILITY")
         self.btn_network.clicked.connect(lambda: self.action_triggered.emit("run_network"))
         layout.addWidget(self.btn_network)
 
-        self.btn_swarm = QPushButton("🤖 Swarm Co-Pilot")
+        self.btn_swarm = QPushButton("SWARM CO-PILOT")
         self.btn_swarm.clicked.connect(lambda: self.action_triggered.emit("toggle_swarm"))
         layout.addWidget(self.btn_swarm)
 
         layout.addStretch()
 
         # Add Node & Export Buttons
-        self.btn_add_node = QPushButton("➕ Add Node...")
+        self.btn_add_node = QPushButton("+ ADD NODE")
         self.btn_add_node.clicked.connect(lambda: self.action_triggered.emit("add_node_dialog"))
         layout.addWidget(self.btn_add_node)
 
-        self.btn_export = QPushButton("💾 Export Excel")
+        self.btn_export = QPushButton("EXPORT EXCEL")
         self.btn_export.clicked.connect(lambda: self.action_triggered.emit("export_excel"))
         layout.addWidget(self.btn_export)

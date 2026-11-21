@@ -88,20 +88,20 @@ class MainWindow(QMainWindow):
         # Tab 1: Executive Decision Inspector
         self.decision_inspector = DecisionInspectorWidget(self)
         self.decision_inspector.action_applied.connect(self._on_decision_action_applied)
-        self.side_tabs.addTab(self.decision_inspector, "🎯 Decision Cockpit")
+        self.side_tabs.addTab(self.decision_inspector, "DECISION COCKPIT")
 
         # Tab 2: Visual Distribution Charts
         self.chart_inspector = ChartInspectorWidget(self)
-        self.side_tabs.addTab(self.chart_inspector, "📈 Visual Analytics")
+        self.side_tabs.addTab(self.chart_inspector, "VISUAL ANALYTICS")
 
         # Tab 3: Swarm Co-Pilot
         self.swarm_drawer = SwarmDrawerWidget(self)
         self.swarm_drawer.swarm_action_triggered.connect(self._on_swarm_action)
-        self.side_tabs.addTab(self.swarm_drawer, "🤖 Swarm Audit")
+        self.side_tabs.addTab(self.swarm_drawer, "SWARM CO-PILOT")
 
         # Tab 4: Audit Ledger
         self.audit_table = SpreadsheetView(self)
-        self.side_tabs.addTab(self.audit_table, "📋 Audit Ledger")
+        self.side_tabs.addTab(self.audit_table, "AUDIT LEDGER")
 
         main_h_splitter.addWidget(self.side_tabs)
 
@@ -156,18 +156,39 @@ class MainWindow(QMainWindow):
         self.audit_table.load_dataframe(self.dag.audit_ledger.to_dataframe())
 
     def _update_charts_from_dict(self, node_type: str, data: Dict[str, Any]):
-        if "elasticity" in node_type:
-            self.chart_inspector.plot_elasticity(data)
-            self.side_tabs.setCurrentWidget(self.chart_inspector)
-        elif "cfar" in node_type:
-            self.chart_inspector.plot_cfar(data)
-            self.side_tabs.setCurrentWidget(self.chart_inspector)
-        elif "anomaly" in node_type:
-            df = self.grid_view.get_current_dataframe()
-            anomalies_df = data.get("anomalies_df")
-            if anomalies_df is not None:
-                self.chart_inspector.plot_anomalies(df, anomalies_df)
+        try:
+            if "elasticity" in node_type:
+                self.chart_inspector.plot_elasticity(data)
                 self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "cfar" in node_type:
+                self.chart_inspector.plot_cfar(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "anomaly" in node_type:
+                df = self.grid_view.get_current_dataframe()
+                anomalies_df = data.get("anomalies_df")
+                if anomalies_df is not None:
+                    self.chart_inspector.plot_anomalies(df, anomalies_df)
+                    self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "inventory" in node_type or "meio" in node_type:
+                self.chart_inspector.plot_inventory(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "cohort" in node_type or "churn" in node_type:
+                self.chart_inspector.plot_cohort_churn(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "attribution" in node_type or "markov" in node_type:
+                self.chart_inspector.plot_attribution(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "network" in node_type or "fragility" in node_type:
+                self.chart_inspector.plot_network(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "bandit" in node_type:
+                self.chart_inspector.plot_bandit(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+            elif "knapsack" in node_type:
+                self.chart_inspector.plot_knapsack(data)
+                self.side_tabs.setCurrentWidget(self.chart_inspector)
+        except Exception as e:
+            print(f"[Chart Error] {e}")
 
     def _on_connection_created(self, source_id: str, target_id: str):
         if self.dag.add_edge(source_id, target_id):
@@ -230,15 +251,19 @@ class MainWindow(QMainWindow):
             self._on_connection_created(src_id, node.node_id)
 
         elif action_id == "run_inventory":
-            node = self.dag.add_node("analytics_inventory_meio", "Multi-Echelon Inventory MEIO", x=620, y=380)
+            inv_src = next((n for n in self.dag.nodes.values() if n.node_type == "source_synthetic" and n.params.get("table") == "inventory"), None)
+            if not inv_src:
+                inv_src = self.dag.add_node("source_synthetic", "Inventory Table Source", params={"table": "inventory"}, x=40, y=260)
+                self.canvas_view.add_node_item(inv_src.node_id, inv_src.node_type, inv_src.title, inv_src.x, inv_src.y)
+                self.dag.execute_node(inv_src.node_id)
+            node = self.dag.add_node("analytics_inventory_meio", "Multi-Echelon Inventory MEIO", x=420, y=260)
             self.canvas_view.add_node_item(node.node_id, node.node_type, node.title, node.x, node.y)
-            src_id = list(self.dag.nodes.keys())[0]
-            self._on_connection_created(src_id, node.node_id)
+            self._on_connection_created(inv_src.node_id, node.node_id)
 
         elif action_id == "run_network":
-            node = self.dag.add_node("analytics_network_fragility", "Network Fragility Graph", x=620, y=480)
-            self.canvas_view.add_node_item(node.node_id, node.node_type, node.title, node.x, node.y)
             src_id = list(self.dag.nodes.keys())[0]
+            node = self.dag.add_node("analytics_network_fragility", "Network Fragility Graph", x=620, y=360)
+            self.canvas_view.add_node_item(node.node_id, node.node_type, node.title, node.x, node.y)
             self._on_connection_created(src_id, node.node_id)
 
         elif action_id == "toggle_swarm":

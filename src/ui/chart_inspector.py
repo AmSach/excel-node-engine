@@ -86,7 +86,130 @@ class ChartInspectorWidget(QWidget):
         for spine in ax.spines.values():
             spine.set_color("#e4e4e7")
         self.figure.tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
+
+    def plot_inventory(self, meio_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Inventory Stock Levels vs Reorder Point (ROP)")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        policy_df = meio_res.get("policy_df")
+        if policy_df is not None and not policy_df.empty:
+            subset = policy_df.head(8)
+            skus = subset["sku"].tolist()
+            stocks = subset["current_stock"].tolist()
+            rops = subset["reorder_point"].tolist()
+            x = np.arange(len(skus))
+            w = 0.35
+            ax.bar(x - w/2, stocks, width=w, label="On-Hand Units", color="#3b82f6")
+            ax.bar(x + w/2, rops, width=w, label="Reorder Point (ROP)", color="#ef4444")
+            ax.set_xticks(x)
+            ax.set_xticklabels(skus, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Units", fontsize=9, color="#52525b")
+            ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_cohort_churn(self, churn_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Cohort Retention Decay Curves")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        periods = np.arange(1, 13)
+        decay = float(churn_res.get("decay_exponent", 0.45))
+        curve = 1.0 / (periods ** decay)
+        ax.plot(periods, curve * 100.0, color="#6366f1", marker="s", linewidth=2.0, label="Empirical Retention %")
+        ax.set_xlabel("Tenure Month", fontsize=9, color="#52525b")
+        ax.set_ylabel("Retention (%)", fontsize=9, color="#52525b")
+        ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_attribution(self, attr_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Multi-Touch Attribution Channel Weights")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        weights = attr_res.get("channel_weights", {})
+        if weights:
+            chans = list(weights.keys())
+            vals = [float(v) * 100.0 for v in weights.values()]
+            y = np.arange(len(chans))
+            ax.barh(y, vals, color="#10b981", height=0.55)
+            ax.set_yticks(y)
+            ax.set_yticklabels(chans, fontsize=9, color="#52525b")
+            ax.set_xlabel("Attributed Conversion Share (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_network(self, net_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Supply Chain Centrality & Single-Point Bottlenecks")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        ranks = net_res.get("centrality_ranks", {})
+        if ranks:
+            nodes = list(ranks.keys())[:8]
+            scores = [float(ranks[k]) for k in nodes]
+            x = np.arange(len(nodes))
+            ax.bar(x, scores, color="#f59e0b", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(nodes, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Bottleneck Centrality", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_bandit(self, bandit_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Thompson Sampling Posterior Conversion Rates")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        means = bandit_res.get("estimated_means", {})
+        if means:
+            arms = list(means.keys())
+            vals = [float(means[k]) * 100.0 for k in arms]
+            x = np.arange(len(arms))
+            ax.bar(x, vals, color="#06b6d4", width=0.45)
+            ax.set_xticks(x)
+            ax.set_xticklabels(arms, fontsize=9, color="#52525b")
+            ax.set_ylabel("Posterior Conversion Mean (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_knapsack(self, knapsack_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Optimal Capital Budget Allocation")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        selected = knapsack_res.get("selected_initiatives", [])
+        if selected:
+            names = [s.get("name", f"Init {i}") for i, s in enumerate(selected)]
+            rois = [float(s.get("expected_roi", 0.0)) for s in selected]
+            x = np.arange(len(names))
+            ax.bar(x, rois, color="#8b5cf6", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(names, rotation=20, fontsize=8, color="#52525b")
+            ax.set_ylabel("Expected Return ($)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
 
     def plot_cfar(self, cfar_res: Dict[str, Any]):
         self.figure.clear()
@@ -121,7 +244,130 @@ class ChartInspectorWidget(QWidget):
         for spine in ax.spines.values():
             spine.set_color("#e4e4e7")
         self.figure.tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
+
+    def plot_inventory(self, meio_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Inventory Stock Levels vs Reorder Point (ROP)")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        policy_df = meio_res.get("policy_df")
+        if policy_df is not None and not policy_df.empty:
+            subset = policy_df.head(8)
+            skus = subset["sku"].tolist()
+            stocks = subset["current_stock"].tolist()
+            rops = subset["reorder_point"].tolist()
+            x = np.arange(len(skus))
+            w = 0.35
+            ax.bar(x - w/2, stocks, width=w, label="On-Hand Units", color="#3b82f6")
+            ax.bar(x + w/2, rops, width=w, label="Reorder Point (ROP)", color="#ef4444")
+            ax.set_xticks(x)
+            ax.set_xticklabels(skus, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Units", fontsize=9, color="#52525b")
+            ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_cohort_churn(self, churn_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Cohort Retention Decay Curves")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        periods = np.arange(1, 13)
+        decay = float(churn_res.get("decay_exponent", 0.45))
+        curve = 1.0 / (periods ** decay)
+        ax.plot(periods, curve * 100.0, color="#6366f1", marker="s", linewidth=2.0, label="Empirical Retention %")
+        ax.set_xlabel("Tenure Month", fontsize=9, color="#52525b")
+        ax.set_ylabel("Retention (%)", fontsize=9, color="#52525b")
+        ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_attribution(self, attr_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Multi-Touch Attribution Channel Weights")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        weights = attr_res.get("channel_weights", {})
+        if weights:
+            chans = list(weights.keys())
+            vals = [float(v) * 100.0 for v in weights.values()]
+            y = np.arange(len(chans))
+            ax.barh(y, vals, color="#10b981", height=0.55)
+            ax.set_yticks(y)
+            ax.set_yticklabels(chans, fontsize=9, color="#52525b")
+            ax.set_xlabel("Attributed Conversion Share (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_network(self, net_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Supply Chain Centrality & Single-Point Bottlenecks")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        ranks = net_res.get("centrality_ranks", {})
+        if ranks:
+            nodes = list(ranks.keys())[:8]
+            scores = [float(ranks[k]) for k in nodes]
+            x = np.arange(len(nodes))
+            ax.bar(x, scores, color="#f59e0b", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(nodes, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Bottleneck Centrality", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_bandit(self, bandit_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Thompson Sampling Posterior Conversion Rates")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        means = bandit_res.get("estimated_means", {})
+        if means:
+            arms = list(means.keys())
+            vals = [float(means[k]) * 100.0 for k in arms]
+            x = np.arange(len(arms))
+            ax.bar(x, vals, color="#06b6d4", width=0.45)
+            ax.set_xticks(x)
+            ax.set_xticklabels(arms, fontsize=9, color="#52525b")
+            ax.set_ylabel("Posterior Conversion Mean (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_knapsack(self, knapsack_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Optimal Capital Budget Allocation")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        selected = knapsack_res.get("selected_initiatives", [])
+        if selected:
+            names = [s.get("name", f"Init {i}") for i, s in enumerate(selected)]
+            rois = [float(s.get("expected_roi", 0.0)) for s in selected]
+            x = np.arange(len(names))
+            ax.bar(x, rois, color="#8b5cf6", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(names, rotation=20, fontsize=8, color="#52525b")
+            ax.set_ylabel("Expected Return ($)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
 
     def plot_anomalies(self, df: pd.DataFrame, anomalies_df: pd.DataFrame):
         self.figure.clear()
@@ -149,4 +395,127 @@ class ChartInspectorWidget(QWidget):
         for spine in ax.spines.values():
             spine.set_color("#e4e4e7")
         self.figure.tight_layout()
-        self.canvas.draw()
+        self.canvas.draw_idle()
+
+    def plot_inventory(self, meio_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Inventory Stock Levels vs Reorder Point (ROP)")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        policy_df = meio_res.get("policy_df")
+        if policy_df is not None and not policy_df.empty:
+            subset = policy_df.head(8)
+            skus = subset["sku"].tolist()
+            stocks = subset["current_stock"].tolist()
+            rops = subset["reorder_point"].tolist()
+            x = np.arange(len(skus))
+            w = 0.35
+            ax.bar(x - w/2, stocks, width=w, label="On-Hand Units", color="#3b82f6")
+            ax.bar(x + w/2, rops, width=w, label="Reorder Point (ROP)", color="#ef4444")
+            ax.set_xticks(x)
+            ax.set_xticklabels(skus, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Units", fontsize=9, color="#52525b")
+            ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_cohort_churn(self, churn_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Cohort Retention Decay Curves")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        periods = np.arange(1, 13)
+        decay = float(churn_res.get("decay_exponent", 0.45))
+        curve = 1.0 / (periods ** decay)
+        ax.plot(periods, curve * 100.0, color="#6366f1", marker="s", linewidth=2.0, label="Empirical Retention %")
+        ax.set_xlabel("Tenure Month", fontsize=9, color="#52525b")
+        ax.set_ylabel("Retention (%)", fontsize=9, color="#52525b")
+        ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        ax.legend(fontsize=8, frameon=True, facecolor="#fbfbfb", edgecolor="#e4e4e7")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_attribution(self, attr_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Multi-Touch Attribution Channel Weights")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        weights = attr_res.get("channel_weights", {})
+        if weights:
+            chans = list(weights.keys())
+            vals = [float(v) * 100.0 for v in weights.values()]
+            y = np.arange(len(chans))
+            ax.barh(y, vals, color="#10b981", height=0.55)
+            ax.set_yticks(y)
+            ax.set_yticklabels(chans, fontsize=9, color="#52525b")
+            ax.set_xlabel("Attributed Conversion Share (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_network(self, net_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Supply Chain Centrality & Single-Point Bottlenecks")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        ranks = net_res.get("centrality_ranks", {})
+        if ranks:
+            nodes = list(ranks.keys())[:8]
+            scores = [float(ranks[k]) for k in nodes]
+            x = np.arange(len(nodes))
+            ax.bar(x, scores, color="#f59e0b", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(nodes, rotation=25, fontsize=8, color="#52525b")
+            ax.set_ylabel("Bottleneck Centrality", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_bandit(self, bandit_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Thompson Sampling Posterior Conversion Rates")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        means = bandit_res.get("estimated_means", {})
+        if means:
+            arms = list(means.keys())
+            vals = [float(means[k]) * 100.0 for k in arms]
+            x = np.arange(len(arms))
+            ax.bar(x, vals, color="#06b6d4", width=0.45)
+            ax.set_xticks(x)
+            ax.set_xticklabels(arms, fontsize=9, color="#52525b")
+            ax.set_ylabel("Posterior Conversion Mean (%)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
+
+    def plot_knapsack(self, knapsack_res: Dict[str, Any]):
+        self.figure.clear()
+        self.title_label.setText("Optimal Capital Budget Allocation")
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor("#ffffff")
+        selected = knapsack_res.get("selected_initiatives", [])
+        if selected:
+            names = [s.get("name", f"Init {i}") for i, s in enumerate(selected)]
+            rois = [float(s.get("expected_roi", 0.0)) for s in selected]
+            x = np.arange(len(names))
+            ax.bar(x, rois, color="#8b5cf6", width=0.5)
+            ax.set_xticks(x)
+            ax.set_xticklabels(names, rotation=20, fontsize=8, color="#52525b")
+            ax.set_ylabel("Expected Return ($)", fontsize=9, color="#52525b")
+            ax.grid(True, linestyle="--", alpha=0.3, color="#d4d4d8")
+        for spine in ax.spines.values():
+            spine.set_color("#e4e4e7")
+        self.figure.tight_layout()
+        self.canvas.draw_idle()
