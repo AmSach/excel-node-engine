@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-title Decision Graph - Enterprise Node-Spreadsheet & Analytics Engine
+title Decision Graph - Enterprise Node-Spreadsheet and Analytics Engine
 
 echo ===============================================================================
 echo                DECISION GRAPH DESKTOP ANALYTICS ENGINE
@@ -9,7 +9,14 @@ echo          Native Python Spreadsheet fused with Visual Node Pipeline
 echo ===============================================================================
 echo.
 
-:: Detect Python environment
+:: 1. Check if compiled standalone executable exists
+if exist "dist\DecisionGraph\DecisionGraph.exe" (
+    echo [OK] Launching compiled standalone executable: dist\DecisionGraph\DecisionGraph.exe
+    start "" "dist\DecisionGraph\DecisionGraph.exe"
+    exit /b 0
+)
+
+:: 2. Otherwise launch via Python environment
 set "PYTHON_CMD="
 if exist "E:\Python312\python.exe" (
     set "PYTHON_CMD=E:\Python312\python.exe"
@@ -26,17 +33,15 @@ if exist "E:\Python312\python.exe" (
 )
 
 if "%PYTHON_CMD%"=="" (
-    echo [ERROR] Python 3.10+ was not found on your system.
-    echo Please install Python and ensure PySide6 is installed.
+    echo [ERROR] Neither DecisionGraph.exe nor Python 3.10+ was found.
+    echo Please install Python or verify the build.
     echo.
     pause
     exit /b 1
 )
 
-echo [OK] Using Python: %PYTHON_CMD%
-echo [OK] Launching Decision Graph Desktop Application...
+echo [OK] Launching via Python: %PYTHON_CMD% run.py
 echo.
-
 "%PYTHON_CMD%" run.py
 
 if %errorlevel% neq 0 (

@@ -7,9 +7,14 @@
 
 ## 1. Quick Start (1-Click Run)
 
-Requirements: **Python 3.10+** (PySide6, pandas, numpy, scipy, matplotlib).
+Decision Graph is available as both a standalone compiled Windows executable (`DecisionGraph.exe`) and as pure Python code.
 
-* **Windows (1-Click Launch):** Double-click **`START_APP.bat`**. It automatically detects your Python environment, verifies dependencies, and launches the native desktop window immediately.
+* **Windows Executable (1-Click Standalone Run):**
+  - Double-click **`RUN_EXE.bat`** or **`dist\DecisionGraph\DecisionGraph.exe`**.
+  - No Python installation required when running the standalone executable package.
+* **Windows Intelligent Launcher:**
+  - Double-click **`START_APP.bat`**.
+  - Automatically runs `dist\DecisionGraph\DecisionGraph.exe` if present; otherwise seamlessly executes via Python `run.py`.
 * **Manual Terminal Launch:**
   ```bash
   python run.py

@@ -5,6 +5,13 @@ Launches the standalone PySide6 desktop window with high-DPI scaling.
 
 import sys
 import os
+import platform
+
+# Fast bypass for Windows WMI COM lockup
+def _fast_wmi_bypass(*args, **kwargs):
+    raise OSError("WMI bypassed for instant execution")
+platform._wmi_query = _fast_wmi_bypass
+
 from pathlib import Path
 
 # Ensure project root is in python path
