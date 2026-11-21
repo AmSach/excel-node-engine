@@ -10,7 +10,18 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        'torch', 'torchvision', 'torchaudio',
+        'tensorflow', 'tensorboard', 'keras',
+        'transformers', 'huggingface_hub', 'datasets',
+        'cv2', 'PIL.TkImagePlugin', 'tkinter', '_tkinter',
+        'IPython', 'ipykernel', 'jupyter', 'notebook', 'nbformat',
+        'zmq', 'tornado', 'sqlalchemy', 'pytest', '_pytest',
+        'onnxruntime', 'dask', 'numba', 'llvmlite',
+        'opentelemetry', 'uvicorn', 'websockets', 'fastapi',
+        'botocore', 'boto3', 'google', 'grpc', 'lxml',
+        'spacy', 'nltk', 'scikit_learn', 'sklearn'
+    ],
     noarchive=False,
     optimize=0,
 )
